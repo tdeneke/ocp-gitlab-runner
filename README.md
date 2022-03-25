@@ -9,17 +9,22 @@ deploy the GitLab runner in OCP with minimum efforts.
 ## Usage
 
 Add and instantiate the template. You should replace `GITLAB_RUNNER_VERSION` by required version of
-`gitlab-runner`, e.g. `v13.8.0`. It's not guaranteed that version from `master` will work due to
-changes in <https://gitlab.com/gitlab-org/gitlab-runner> repo. You can also specify `latest` in
-`GITLAB_RUNNER_VERSION` to provision the latest stable version of the template.
+`gitlab-runner`, e.g. `v14.9.1`, `main`, etc. For any changes in version tagging conventions check the repositoy at <https://gitlab.com/gitlab-org/gitlab-runner>.
 
 ```sh
 oc process -f https://raw.githubusercontent.com/RedHatQE/ocp-gitlab-runner/GITLAB_RUNNER_VERSION/ocp-gitlab-runner-template.yaml \
 -p NAME="some_name" \
 -p GITLAB_HOST="example.com" \
 -p REGISTRATION_TOKEN="$(echo -n some_token | base64)" \
+-p GITLAB_RUNNER_VERSION="v14.9.1" \
+-p TLS_CA_CERT="$( openssl s_client -showcerts -connect example.com:443 < /dev/null 2>/dev/null | openssl x509 -outform PEM | base64 )" \
 -p CONCURRENT="number_of_concurrent_pods" | oc create -f -
 ```
+
+In some cases the `TLS_CA_CERT` parameter might not be required and can be removed. When required it can also alternatively be provided by first first downloading the Gitlab instance's certificate as:
+`openssl s_client -showcerts -connect example.com:443 < /dev/null 2>/dev/null | openssl x509 -outform PEM > /etc/gitlab-runner/certs/gitlab.example.com.crt` 
+
+And set the parameter after using: `-p TLS_CA_CERT="$( cat /etc/gitlab-runner/certs/example.com.crt | base64 )"`. 
 
 In order to delete all created objects:
 
